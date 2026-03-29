@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Logging in...</title>
+</head>
+<body style="background:black;color:white;text-align:center;margin-top:100px">
+
+<h2>Logging in...</h2>
+
+<script>
+const url = new URL(window.location.href);
+const code = url.searchParams.get("code");
+
+if(code){
+  localStorage.setItem("loggedIn","true");
+  localStorage.setItem("username","User");
+  window.location.href = "/";
+}else{
+  document.body.innerHTML = "<h2>Login failed</h2>";
+}
+</script>
+
+</body>
+</html>
