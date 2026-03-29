@@ -420,18 +420,24 @@
   </div>
 </div>
 
-<footer>
-  <span>© 2026 ATK Notifier. All rights reserved.</span>
-  <a href="#">Privacy Policy</a>
-</footer>
-<div class="toast" id="toast"></div>
-
 <script>
+
+// ✅ KEEP LOGIN
+if(localStorage.getItem("loggedIn") === "true"){
+  loggedIn = true;
+  username = localStorage.getItem("username") || "User";
+}
+
 // Stars
 const se=document.getElementById('stars');
-for(let i=0;i<120;i++){const s=document.createElement('div');s.className='star';const sz=Math.random()*2.5+0.5;s.style.cssText=`width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;--dur:${2+Math.random()*4}s;--delay:${Math.random()*4}s;--op:${0.3+Math.random()*0.6}`;se.appendChild(s);}
+for(let i=0;i<120;i++){
+  const s=document.createElement('div');
+  s.className='star';
+  const sz=Math.random()*2.5+0.5;
+  s.style.cssText=`width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;--dur:${2+Math.random()*4}s;--delay:${Math.random()*4}s;--op:${0.3+Math.random()*0.6}`;
+  se.appendChild(s);
+}// State
 
-// State
 let balance=0,loggedIn=false,username='',userId='',transactions=[],customers=[],farmerSlots=[],diamondSlots=[],activeKey=null;
 const FM=4,DM=6;
 
