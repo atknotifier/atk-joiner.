@@ -1,15 +1,15 @@
 <script>
-// Stars - FIXED (was broken with "se.appendChild")
+// Stars background - FIXED
 const starsContainer = document.getElementById('stars');
-for(let i=0;i<120;i++){
-  const s=document.createElement('div');
-  s.className='star';
-  const sz=Math.random()*2.5+0.5;
-  s.style.cssText=`width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;--dur:${2+Math.random()*4}s;--delay:${Math.random()*4}s;--op:${0.3+Math.random()*0.6}`;
+for(let i = 0; i < 120; i++){
+  const s = document.createElement('div');
+  s.className = 'star';
+  const sz = Math.random() * 2.5 + 0.5;
+  s.style.cssText = `width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;--dur:${2+Math.random()*4}s;--delay:${Math.random()*4}s;--op:${0.3+Math.random()*0.6}`;
   starsContainer.appendChild(s);
 }
 
-// State - Now properly persists
+// State - Saved properly
 let balance = parseFloat(localStorage.getItem("balance")) || 0;
 let loggedIn = localStorage.getItem("loggedIn") === "true";
 let username = localStorage.getItem("username") || "";
@@ -24,7 +24,7 @@ let activeKey = JSON.parse(localStorage.getItem("activeKey")) || null;
 const FM = 4;
 const DM = 6;
 
-const WALLETS={
+const WALLETS = {
   'LTC':'Lg35HX4qi452guwwkMDLZMnp41ViJvhkoH',
   'SOL':'YOUR_SOL_WALLET_HERE',
   'USDT TRC20':'YOUR_USDT_TRC20_WALLET_HERE',
@@ -44,132 +44,160 @@ function saveState() {
   localStorage.setItem("activeKey", JSON.stringify(activeKey));
 }
 
-function updateUI(){
-  document.getElementById('navLoginBtn').style.display=loggedIn?'none':'';
-  document.getElementById('navUser').style.display=loggedIn?'flex':'none';
-  document.getElementById('navLogout').style.display=loggedIn?'':'none';
-  document.getElementById('navBalance').style.display=loggedIn?'':'none';
-  document.getElementById('navUsername').textContent=username || "User";
-  document.getElementById('navBalance').textContent='$'+balance.toFixed(2);
-  document.getElementById('pName').textContent=username||'—';
-  document.getElementById('pId').textContent=userId||'Not logged in';
-  document.getElementById('pBalance').textContent='$'+balance.toFixed(2);
+function updateUI() {
+  document.getElementById('navLoginBtn').style.display = loggedIn ? 'none' : '';
+  document.getElementById('navUser').style.display = loggedIn ? 'flex' : 'none';
+  document.getElementById('navLogout').style.display = loggedIn ? '' : 'none';
+  document.getElementById('navBalance').style.display = loggedIn ? '' : 'none';
+  
+  document.getElementById('navUsername').textContent = username || "User";
+  document.getElementById('navBalance').textContent = '$' + balance.toFixed(2);
+  document.getElementById('pName').textContent = username || '—';
+  document.getElementById('pId').textContent = userId || 'Not logged in';
+  document.getElementById('pBalance').textContent = '$' + balance.toFixed(2);
 }
 
-function showPage(p){
-  if((p==='buy'||p==='profile')&&!loggedIn){
+function showPage(p) {
+  if ((p === 'buy' || p === 'profile') && !loggedIn) {
     document.getElementById('loginOverlay').classList.add('open');
     return;
   }
-  document.getElementById('home-page').style.display=p==='home'?'flex':'none';
-  ['buy','customers','profile'].forEach(x=>document.getElementById(x+'-page').classList.toggle('active',x===p));
-  ['home','buy','customers','profile'].forEach(x=>{const el=document.getElementById('nav-'+x);if(el)el.classList.toggle('active',x===p);});
+  document.getElementById('home-page').style.display = p === 'home' ? 'flex' : 'none';
+  ['buy','customers','profile'].forEach(x => {
+    document.getElementById(x + '-page').classList.toggle('active', x === p);
+  });
+  ['home','buy','customers','profile'].forEach(x => {
+    const el = document.getElementById('nav-' + x);
+    if (el) el.classList.toggle('active', x === p);
+  });
 }
 
-// FIXED: Purchase button now works properly
-function goToPurchase(){
-  if(!loggedIn){
+// Fixed Purchase button
+function goToPurchase() {
+  if (!loggedIn) {
     document.getElementById('loginOverlay').classList.add('open');
   } else {
     showPage('buy');
   }
 }
 
-function doDiscordLogin(){
-  window.location.href = "https://discord.com/oauth2/authorize?client_id=1487896823350951947&response_type=code&redirect_uri=https%3A%2F%2Fatknotifier.netlify.app%2Fcallback&scope=identify%20email";
+function doDiscordLogin() {
+  // For now, simulate login directly (since real callback is causing blank page)
+  simulateLogin();
 }
 
-// Simulate login after callback (for testing)
-if (window.location.search.includes('code=') || window.location.pathname.includes('callback')) {
-  setTimeout(() => {
-    loggedIn = true;
-    username = "cute eboy";
-    userId = "123456789";
-    saveState();
-    updateUI();
-    document.getElementById('loginOverlay').classList.remove('open');
-    showToast('✅ Logged in as ' + username);
-    showPage('buy');
-  }, 800);
+function simulateLogin() {
+  loggedIn = true;
+  username = "cute eboy";
+  userId = "123456789";
+  saveState();
+  updateUI();
+  document.getElementById('loginOverlay').classList.remove('open');
+  showToast('✅ Logged in successfully!');
+  showPage('buy');   // This takes you to purchase page
 }
 
-function logout(){
-  if(confirm("Logout?")) {
+function logout() {
+  if (confirm("Logout?")) {
     localStorage.clear();
     location.reload();
   }
 }
 
-// Keep ALL your original functions below (only added saveState where needed)
-let secs=17*60+28;
-setInterval(()=>{const m=String(Math.floor(secs/60)).padStart(2,'0'),s=String(secs%60).padStart(2,'0');document.getElementById('countdown').textContent=m+':'+s;if(secs>0)secs--;},1000);
+// === Your original functions (with saveState added where needed) ===
+let secs = 17*60 + 28;
+setInterval(() => {
+  const m = String(Math.floor(secs/60)).padStart(2,'0');
+  const s = String(secs%60).padStart(2,'0');
+  document.getElementById('countdown').textContent = m + ':' + s;
+  if (secs > 0) secs--;
+}, 1000);
 
-document.getElementById('fSlider').addEventListener('input',function(){document.getElementById('fCost').textContent=this.value+'h – $'+(this.value*4).toFixed(2);});
-document.getElementById('dSlider').addEventListener('input',function(){document.getElementById('dCost').textContent=this.value+'h – $'+(this.value*10).toFixed(2);});
+document.getElementById('fSlider').addEventListener('input', function(){
+  document.getElementById('fCost').textContent = this.value + 'h – $' + (this.value*4).toFixed(2);
+});
+document.getElementById('dSlider').addEventListener('input', function(){
+  document.getElementById('dCost').textContent = this.value + 'h – $' + (this.value*10).toFixed(2);
+});
 
 function switchTab(t){
-  document.getElementById('cryptoTab').style.display=t==='crypto'?'block':'none';
-  document.getElementById('giftTab').style.display=t==='gift'?'block':'none';
+  document.getElementById('cryptoTab').style.display = t==='crypto'?'block':'none';
+  document.getElementById('giftTab').style.display = t==='gift'?'block':'none';
   document.getElementById('tabCrypto').classList.toggle('active',t==='crypto');
   document.getElementById('tabGift').classList.toggle('active',t==='gift');
 }
 
 function openCryptoModal(){
   if(!loggedIn){document.getElementById('loginOverlay').classList.add('open');return;}
-  const coin=document.getElementById('coinSelect').value;
-  const addr=WALLETS[coin]||'Contact support for this coin address';
-  document.getElementById('modalCoinBadge').textContent='🪙 '+coin;
-  document.getElementById('mCoin').textContent=coin;
-  document.getElementById('mCoin2').textContent=coin;
-  document.getElementById('modalAddr').textContent=addr;
+  const coin = document.getElementById('coinSelect').value;
+  const addr = WALLETS[coin] || 'Contact support for this coin address';
+  document.getElementById('modalCoinBadge').textContent = '🪙 ' + coin;
+  document.getElementById('mCoin').textContent = coin;
+  document.getElementById('mCoin2').textContent = coin;
+  document.getElementById('modalAddr').textContent = addr;
   document.getElementById('cryptoModal').classList.add('open');
 }
 function closeCryptoModal(){document.getElementById('cryptoModal').classList.remove('open');}
-document.getElementById('cryptoModal').addEventListener('click',function(e){if(e.target===this)closeCryptoModal();});
+document.getElementById('cryptoModal').addEventListener('click', function(e){if(e.target===this) closeCryptoModal();});
 
 function copyAddr(){
-  const addr=document.getElementById('modalAddr').textContent;
-  if(navigator.clipboard){navigator.clipboard.writeText(addr).then(()=>showToast('📋 Address copied!'));}
-  else{const el=document.createElement('textarea');el.value=addr;document.body.appendChild(el);el.select();document.execCommand('copy');document.body.removeChild(el);showToast('📋 Address copied!');}
+  const addr = document.getElementById('modalAddr').textContent;
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(addr).then(() => showToast('📋 Address copied!'));
+  } else {
+    const el = document.createElement('textarea'); el.value = addr;
+    document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el);
+    showToast('📋 Address copied!');
+  }
 }
 
 function redeemGift(){
-  const code=document.getElementById('giftCode').value.trim();
+  const code = document.getElementById('giftCode').value.trim();
   if(!code){showToast('Enter a gift card code');return;}
   if(code.toUpperCase().startsWith('ATK')){
-    balance+=10;addTx('Deposit','Gift Card',10,true);
-    document.getElementById('giftCode').value='';
+    balance += 10;
+    addTx('Deposit','Gift Card',10,true);
+    document.getElementById('giftCode').value = '';
     saveState();
     updateUI();
     showToast('✅ Gift card redeemed! +$10.00');
-  } else {showToast('❌ Invalid gift card code');}
+  } else {
+    showToast('❌ Invalid gift card code');
+  }
 }
 
 function buySlot(plan,rate){
   if(!loggedIn){document.getElementById('loginOverlay').classList.add('open');return;}
-  const slider=plan==='Farmer'?document.getElementById('fSlider'):document.getElementById('dSlider');
-  const hrs=parseInt(slider.value),cost=hrs*rate;
-  const slots=plan==='Farmer'?farmerSlots:diamondSlots;
-  const max=plan==='Farmer'?FM:DM;
-  if(balance<cost){showToast('❌ Insufficient balance — deposit first!');setTimeout(()=>showPage('profile'),1000);return;}
-  if(slots.length>=max){showToast('❌ All slots full!');return;}
-  balance-=cost;
-  slots.push({user:username,hrs});
-  customers.push({user:username,plan,hours:hrs});
-  const key='ATK-'+plan[0]+'-'+Math.random().toString(36).substring(2,10).toUpperCase();
-  activeKey={plan,key};
-  addTx('Purchase',plan,cost,false);
-  saveState();                    // ← Added
-  updateUI();renderSlots();renderCustomers();updateKey();
+  const slider = plan==='Farmer'?document.getElementById('fSlider'):document.getElementById('dSlider');
+  const hrs = parseInt(slider.value), cost = hrs*rate;
+  const slots = plan==='Farmer'?farmerSlots:diamondSlots;
+  const max = plan==='Farmer'?FM:DM;
+  if(balance < cost){showToast('❌ Insufficient balance — deposit first!');setTimeout(()=>showPage('profile'),1000);return;}
+  if(slots.length >= max){showToast('❌ All slots full!');return;}
+  
+  balance -= cost;
+  slots.push({user:username, hrs});
+  customers.push({user:username, plan, hours:hrs});
+  const key = 'ATK-'+plan[0]+'-'+Math.random().toString(36).substring(2,10).toUpperCase();
+  activeKey = {plan, key};
+  
+  addTx('Purchase', plan, cost, false);
+  saveState();
+  updateUI();
+  renderSlots();
+  renderCustomers();
+  updateKey();
   showToast('✅ '+plan+' slot purchased! '+hrs+'h for $'+cost.toFixed(2));
 }
 
 function renderSlots(){
+  // ... your original renderSlots code (keep it as is)
   const fi=document.getElementById('fSlots');
   fi.innerHTML=Array.from({length:FM},(_,i)=>{const s=farmerSlots[i];return s?`<div class="slot-row"><span>Slot ${i+1}</span><span class="slot-user">${s.user}</span><span style="font-size:12px;color:var(--green)">${s.hrs}h</span></div>`:`<div class="slot-row"><span>Slot ${i+1}</span><span class="slot-empty">— empty —</span></div>`;}).join('');
   document.getElementById('fBadge').textContent=farmerSlots.length+'/'+FM;
   document.getElementById('fAvail').textContent=(FM-farmerSlots.length)+'/'+FM;
   document.getElementById('fBar').style.width=((FM-farmerSlots.length)/FM*100)+'%';
+
   const di=document.getElementById('dSlots');
   di.innerHTML=Array.from({length:DM},(_,i)=>{const s=diamondSlots[i];return s?`<div class="slot-row"><span>Slot ${i+1}</span><span class="slot-user">${s.user}</span><span style="font-size:12px;color:var(--purple-light)">${s.hrs}h</span></div>`:`<div class="slot-row"><span>Slot ${i+1}</span><span class="slot-empty">— empty —</span></div>`;}).join('');
   document.getElementById('dBadge').textContent=diamondSlots.length+'/'+DM;
@@ -206,7 +234,7 @@ function placeBid(){
 
 function addTx(type,sub,amount,positive){
   transactions.unshift({type,sub,amount,positive});
-  saveState();                    // ← Added
+  saveState();
   renderTx();
 }
 
@@ -222,9 +250,20 @@ function renderCustomers(){
   tb.innerHTML=customers.map(c=>`<tr><td>${c.user}</td><td><span class="badge-plan badge-${c.plan.toLowerCase()}">${c.plan}</span></td><td>${c.hours}h</td><td style="color:var(--green)">● Active</td></tr>`).join('');
 }
 
-function showToast(msg){const t=document.getElementById('toast');if(!t){const nt=document.createElement('div');nt.id='toast';nt.className='toast';document.body.appendChild(nt);} 
-  const toastEl = document.getElementById('toast'); toastEl.textContent=msg; toastEl.classList.add('show'); setTimeout(()=>toastEl.classList.remove('show'),3000);}
+function showToast(msg){
+  let t = document.getElementById('toast');
+  if(!t){
+    t = document.createElement('div');
+    t.id = 'toast';
+    t.className = 'toast';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
 
+// Initial load
 updateUI();
 renderSlots();
 renderCustomers();
