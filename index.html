@@ -436,10 +436,11 @@ for(let i=0;i<120;i++){
   const sz=Math.random()*2.5+0.5;
   s.style.cssText=`width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;--dur:${2+Math.random()*4}s;--delay:${Math.random()*4}s;--op:${0.3+Math.random()*0.6}`;
   se.appendChild(s);
-}// State
-
-let balance=0,loggedIn=false,username='',userId='',transactions=[],customers=[],farmerSlots=[],diamondSlots=[],activeKey=null;
-const FM=4,DM=6;
+// State
+let balance=0;
+let loggedIn = localStorage.getItem("loggedIn") === "true";
+let username = localStorage.getItem("username") || "";
+let userId = '';
 
 // Wallets — replace SOL/ETH/BTC/USDT with your actual addresses
 const WALLETS={
