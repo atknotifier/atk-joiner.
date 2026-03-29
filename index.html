@@ -452,15 +452,8 @@ function showPage(p){
 }
 
 function doDiscordLogin(){
-  window.open('https://discord.gg/atkjoiner','_blank');
-  loggedIn=true;
-  username='atkuser';
-  userId=Math.floor(Math.random()*9e17+1e17).toString();
-  document.getElementById('loginOverlay').classList.remove('open');
-  updateUI();
-  showToast('✅ Logged in as '+username);
+  window.location.href = "https://discord.com/oauth2/authorize?client_id=1487896823350951947&response_type=code&redirect_uri=https%3A%2F%2Fatknotifier.netlify.app%2Fcallback&scope=identify%20email";
 }
-
 function logout(){
   loggedIn=false;username='';userId='';balance=0;transactions=[];customers=[];farmerSlots=[];diamondSlots=[];activeKey=null;
   updateUI();renderSlots();renderCustomers();renderTx();updateKey();showPage('home');showToast('Logged out.');
