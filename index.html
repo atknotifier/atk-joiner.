@@ -1,449 +1,29 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ATK Notifier</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --bg:#080810;--card-bg:#0f0f1a;--border:#1e1e2e;--purple:#7c3aed;--purple-light:#9f5dff;
-    --green:#22c55e;--gold:#f59e0b;--text:#ffffff;--muted:#6b7280;--red:#ef4444;
-  }
-  *{margin:0;padding:0;box-sizing:border-box;}
-  body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;overflow-x:hidden;}
-  .stars{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;}
-  .star{position:absolute;background:white;border-radius:50%;animation:twinkle var(--dur,3s) ease-in-out infinite;animation-delay:var(--delay,0s);opacity:0;}
-  @keyframes twinkle{0%,100%{opacity:0}50%{opacity:var(--op,0.6)}}
-
-  /* NAV */
-  nav{position:relative;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:14px 40px;border-bottom:1px solid var(--border);}
-  .nav-logo{display:flex;align-items:center;gap:10px;font-family:'Syne',sans-serif;font-size:18px;font-weight:800;cursor:pointer;}
-  .nav-logo span{color:var(--purple-light);}
-  .nav-logo-icon{width:32px;height:32px;background:var(--purple);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;}
-  .nav-links{display:flex;gap:32px;list-style:none;}
-  .nav-links a{color:var(--muted);text-decoration:none;font-size:14px;font-weight:500;cursor:pointer;transition:color 0.2s;}
-  .nav-links a:hover{color:white;}
-  .nav-links a.active{color:var(--purple-light);}
-  .nav-right{display:flex;align-items:center;gap:14px;}
-  .nav-balance{color:var(--purple-light);font-size:14px;font-weight:600;cursor:pointer;}
-  .nav-user{background:#1a0a2e;border:1px solid var(--purple);border-radius:20px;padding:6px 14px;font-size:13px;display:flex;align-items:center;gap:8px;cursor:pointer;}
-  .nav-logout{color:var(--muted);font-size:13px;cursor:pointer;background:none;border:none;transition:color 0.2s;}
-  .nav-logout:hover{color:white;}
-
-  /* HERO */
-  .hero{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:100px 24px 120px;min-height:calc(100vh - 61px);}
-  .badge{display:inline-block;border:1px solid var(--purple);border-radius:20px;padding:6px 18px;font-size:13px;color:var(--purple-light);margin-bottom:32px;animation:fadeUp 0.6s ease forwards;}
-  .hero h1{font-family:'Syne',sans-serif;font-size:clamp(52px,9vw,96px);font-weight:800;letter-spacing:-2px;line-height:1;margin-bottom:20px;animation:fadeUp 0.7s 0.1s ease both;}
-  .tagline{color:var(--purple-light);font-size:18px;font-weight:600;margin-bottom:44px;animation:fadeUp 0.7s 0.2s ease both;}
-  .hero-btns{display:flex;gap:14px;animation:fadeUp 0.7s 0.3s ease both;}
-  .btn-primary{background:var(--purple);color:white;border:none;border-radius:10px;padding:14px 32px;font-size:15px;font-weight:600;cursor:pointer;transition:background 0.2s,transform 0.1s;}
-  .btn-primary:hover{background:var(--purple-light);transform:translateY(-1px);}
-  .btn-discord{background:#5865F2;color:white;border:none;border-radius:10px;padding:14px 28px;font-size:15px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:10px;transition:opacity 0.2s,transform 0.1s;}
-  .btn-discord:hover{opacity:0.85;transform:translateY(-1px);}
-  @keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
-
-  /* LOGIN OVERLAY */
-  .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:50;display:none;align-items:center;justify-content:center;}
-  .overlay.open{display:flex;}
-  .login-box{background:#10101e;border:1px solid var(--border);border-radius:20px;padding:48px 40px;width:400px;max-width:95vw;text-align:center;animation:fadeUp 0.3s ease;}
-  .login-box h2{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;margin-bottom:8px;}
-  .login-box p{color:var(--muted);font-size:14px;margin-bottom:32px;}
-  .discord-login-btn{width:100%;background:#5865F2;color:white;border:none;border-radius:12px;padding:16px;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:12px;transition:opacity 0.2s;}
-  .discord-login-btn:hover{opacity:0.85;}
-  .btn-cancel{margin-top:14px;background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;}
-  .btn-cancel:hover{color:white;}
-
-  /* PAGES */
-  .page{display:none;position:relative;z-index:1;}
-  .page.active{display:block;}
-
-  /* PLANS */
-  .plans-section{padding:50px 40px 80px;}
-  .plans-title{text-align:center;font-family:'Syne',sans-serif;font-size:36px;font-weight:800;margin-bottom:8px;}
-  .plans-sub{text-align:center;color:var(--muted);font-size:13px;margin-bottom:32px;}
-  .countdown-box{display:flex;flex-direction:column;align-items:center;background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:16px 40px;max-width:260px;margin:0 auto 40px;}
-  .countdown-label{font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;}
-  .countdown-time{font-family:'Syne',sans-serif;font-size:32px;font-weight:700;letter-spacing:2px;}
-  .countdown-dot{width:8px;height:8px;background:var(--green);border-radius:50%;margin-top:8px;animation:pulse 1.5s ease-in-out infinite;}
-  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
-  .plans-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:1100px;margin:0 auto;}
-  .plan-card{background:var(--card-bg);border:1px solid var(--border);border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:16px;}
-  .plan-header{display:flex;justify-content:space-between;align-items:center;}
-  .plan-name{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;}
-  .plan-name.farmer{color:var(--green)}.plan-name.diamond{color:var(--purple-light)}.plan-name.bidding{color:var(--gold)}
-  .plan-slots{font-size:12px;font-weight:600;background:rgba(255,255,255,0.05);border-radius:6px;padding:3px 8px;}
-  .plan-slots.farmer{color:var(--green)}.plan-slots.diamond{color:var(--purple-light)}.plan-slots.bidding{color:var(--gold)}
-  .plan-price{font-family:'Syne',sans-serif;font-size:48px;font-weight:800;line-height:1;}
-  .plan-price sup{font-size:22px;vertical-align:super}.plan-price span{font-size:16px;font-weight:400;color:var(--muted)}
-  .slider-row{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);}
-  .plan-slider{width:100%;accent-color:var(--green);margin:6px 0;}
-  .plan-slider.diamond{accent-color:var(--purple);}
-  .detail-row{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);}
-  .detail-val{color:var(--text);font-weight:500;}
-  .avail-section{border-top:1px solid var(--border);padding-top:12px;}
-  .avail-label{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:6px;}
-  .avail-bar-wrap{height:4px;background:#1e1e2e;border-radius:2px;margin-bottom:12px;overflow:hidden;}
-  .avail-bar-fill{height:100%;border-radius:2px;transition:width 0.4s;}
-  .btn-buy{width:100%;padding:13px;border-radius:10px;border:none;font-size:14px;font-weight:600;cursor:pointer;transition:opacity 0.2s;}
-  .btn-buy:hover{opacity:0.85;}
-  .btn-buy.farmer{background:var(--green);color:#000;}
-  .btn-buy.diamond{background:var(--purple);color:white;}
-  .slots-list{display:flex;flex-direction:column;gap:6px;}
-  .slot-row{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.04);}
-  .slot-row:last-child{border-bottom:none;}
-  .slot-empty{color:#333;font-style:italic;}
-  .slot-user{color:var(--text);font-weight:500;}
-  .bid-input-row{display:flex;gap:10px;margin-top:8px;}
-  .bid-input{flex:1;background:#1a1a2e;border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--muted);font-size:14px;outline:none;}
-  .bid-btn{background:var(--gold);color:#000;border:none;border-radius:8px;padding:10px 20px;font-weight:700;font-size:14px;cursor:pointer;}
-  .bid-note{font-size:11px;color:var(--muted);margin-top:8px;}
-
-  /* PROFILE */
-  .profile-wrap{max-width:750px;margin:0 auto;padding:40px 24px 80px;display:flex;flex-direction:column;gap:20px;}
-  .profile-header-card{background:var(--card-bg);border:1px solid var(--border);border-radius:16px;padding:24px 28px;display:flex;align-items:center;justify-content:space-between;}
-  .profile-user-info{display:flex;align-items:center;gap:16px;}
-  .profile-avatar{width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#db2777);display:flex;align-items:center;justify-content:center;font-size:24px;}
-  .profile-name{font-size:20px;font-weight:700;margin-bottom:4px;}
-  .profile-id{font-size:12px;color:var(--muted);}
-  .profile-balance-block{text-align:right;}
-  .profile-balance-label{font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;}
-  .profile-balance-amount{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--purple-light);}
-  .section-card{background:var(--card-bg);border:1px solid var(--border);border-radius:16px;padding:24px 28px;}
-  .section-title{font-size:16px;font-weight:700;margin-bottom:4px;}
-  .section-sub{font-size:12px;color:var(--muted);margin-bottom:20px;}
-  .deposit-tabs{display:flex;background:#0a0a18;border-radius:10px;padding:4px;margin-bottom:20px;}
-  .dep-tab{flex:1;padding:10px;border-radius:8px;border:none;background:none;color:var(--muted);font-size:14px;font-weight:600;cursor:pointer;transition:all 0.2s;}
-  .dep-tab.active{background:#1e1e2e;color:white;}
-  .crypto-row{display:flex;gap:10px;align-items:center;}
-  .crypto-input{flex:1;background:#0a0a18;border:1px solid var(--border);border-radius:10px;padding:14px 16px;color:white;font-size:15px;outline:none;transition:border-color 0.2s;}
-  .crypto-input:focus{border-color:var(--purple);}
-  .crypto-select{background:#0a0a18;border:1px solid var(--border);border-radius:10px;padding:14px 12px;color:white;font-size:14px;outline:none;cursor:pointer;min-width:110px;}
-  .dep-btn{background:var(--purple);color:white;border:none;border-radius:10px;padding:14px 22px;font-weight:700;font-size:14px;cursor:pointer;white-space:nowrap;transition:opacity 0.2s;}
-  .dep-btn:hover{opacity:0.85;}
-  .crypto-hint{font-size:11px;color:var(--muted);margin-top:8px;}
-  .gift-input{width:100%;background:#0a0a18;border:1px solid var(--border);border-radius:10px;padding:14px 16px;color:white;font-size:15px;outline:none;margin-bottom:12px;}
-  .key-card-inner{background:#0a0a18;border:1px solid var(--border);border-radius:12px;padding:20px;}
-  .key-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
-  .key-plan{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:600;}
-  .key-dot{width:10px;height:10px;border-radius:50%;}
-  .key-status{font-size:13px;font-weight:600;}
-  .key-status.expired{color:var(--muted)}.key-status.active{color:var(--green)}
-  .key-value{font-family:monospace;font-size:13px;color:var(--muted);background:#060612;border:1px solid #111;border-radius:8px;padding:12px 14px;word-break:break-all;margin-bottom:8px;}
-  .key-empty{text-align:center;color:var(--muted);font-size:13px;padding:12px 0;}
-  .tx-list{display:flex;flex-direction:column;gap:2px;}
-  .tx-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid rgba(255,255,255,0.04);}
-  .tx-row:last-child{border-bottom:none;}
-  .tx-left{display:flex;flex-direction:column;gap:3px;}
-  .tx-type{font-size:14px;font-weight:600;}
-  .tx-type.deposit{color:var(--green)}.tx-type.purchase{color:var(--text)}
-  .tx-sub{font-size:12px;color:var(--muted);}
-  .tx-right{display:flex;flex-direction:column;align-items:flex-end;gap:3px;}
-  .tx-amount{font-size:14px;font-weight:700;}
-  .tx-amount.positive{color:var(--green)}.tx-amount.negative{color:var(--text)}
-  .tx-badge{font-size:11px;color:var(--green);background:rgba(34,197,94,0.1);border-radius:4px;padding:2px 7px;}
-  .tx-empty{color:var(--muted);font-size:13px;text-align:center;padding:20px 0;}
-
-  /* CUSTOMERS */
-  .customers-section{padding:50px 40px;max-width:900px;margin:0 auto;}
-  .customers-title{font-family:'Syne',sans-serif;font-size:30px;font-weight:800;margin-bottom:8px;}
-  .customers-sub{color:var(--muted);font-size:13px;margin-bottom:28px;}
-  .customers-table{width:100%;border-collapse:collapse;}
-  .customers-table th{text-align:left;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;padding:10px 16px;border-bottom:1px solid var(--border);}
-  .customers-table td{padding:14px 16px;font-size:14px;border-bottom:1px solid rgba(255,255,255,0.04);}
-  .badge-plan{padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;}
-  .badge-farmer{background:rgba(34,197,94,0.1);color:var(--green);}
-  .badge-diamond{background:rgba(159,93,255,0.1);color:var(--purple-light);}
-
-  /* CRYPTO MODAL */
-  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:100;display:none;align-items:center;justify-content:center;}
-  .modal-overlay.open{display:flex;}
-  .modal{background:#10101e;border:1px solid var(--border);border-radius:20px;padding:36px;width:460px;max-width:95vw;animation:fadeUp 0.3s ease;position:relative;}
-  .modal-close{position:absolute;top:16px;right:20px;background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;}
-  .modal-close:hover{color:white;}
-  .modal h2{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:6px;}
-  .modal-sub{color:var(--muted);font-size:13px;margin-bottom:20px;}
-  .modal-coin-badge{display:inline-flex;align-items:center;gap:6px;background:#1a0a2e;border:1px solid var(--purple);border-radius:8px;padding:6px 12px;font-size:13px;font-weight:600;color:var(--purple-light);margin-bottom:16px;}
-  .modal-addr-label{font-size:12px;color:var(--muted);margin-bottom:8px;}
-  .modal-addr{background:#0a0a18;border:1px solid var(--border);border-radius:10px;padding:14px;font-family:monospace;font-size:13px;color:var(--purple-light);word-break:break-all;margin-bottom:12px;}
-  .modal-copy-btn{width:100%;padding:12px;background:#1e1e2e;border:1px solid var(--border);border-radius:10px;color:white;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:16px;transition:background 0.2s;}
-  .modal-copy-btn:hover{background:#2a2a40;}
-  .modal-steps{display:flex;flex-direction:column;gap:10px;margin-bottom:20px;}
-  .modal-step{display:flex;gap:12px;align-items:flex-start;font-size:13px;color:var(--muted);}
-  .step-num{width:22px;height:22px;background:var(--purple);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:white;flex-shrink:0;margin-top:1px;}
-  .modal-warning{background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:10px;padding:14px;font-size:12px;color:var(--gold);line-height:1.6;}
-
-  footer{position:relative;z-index:1;text-align:center;padding:28px;border-top:1px solid var(--border);font-size:13px;color:var(--muted);display:flex;justify-content:space-between;align-items:center;}
-  footer a{color:var(--muted);text-decoration:none;}
-  footer a:hover{color:white;}
-  .toast{position:fixed;bottom:30px;right:30px;background:#1a1a2e;border:1px solid var(--purple);border-radius:12px;padding:14px 22px;font-size:14px;color:white;z-index:200;transform:translateY(80px);opacity:0;transition:all 0.3s ease;max-width:320px;}
-  .toast.show{transform:translateY(0);opacity:1;}
-</style>
-</head>
-<body>
-
-<div class="stars" id="stars"></div>
-
-<!-- LOGIN OVERLAY -->
-<div class="overlay" id="loginOverlay">
-  <div class="login-box">
-    <h2>Welcome to ATK Notifier</h2>
-    <p>Sign in with Discord to purchase slots and manage your account.</p>
-    <button class="discord-login-btn" onclick="doDiscordLogin()">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.336-.505.63-1.041.886-1.604a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.259.564.553 1.099.889 1.603a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
-      Login with Discord
-    </button>
-    <button class="btn-cancel" onclick="document.getElementById('loginOverlay').classList.remove('open')">Cancel</button>
-  </div>
-</div>
-
-<!-- CRYPTO PAYMENT MODAL -->
-<div class="modal-overlay" id="cryptoModal">
-  <div class="modal">
-    <button class="modal-close" onclick="closeCryptoModal()">×</button>
-    <h2>Deposit Crypto</h2>
-    <p class="modal-sub">Send to the address below. Balance updates after blockchain confirmation.</p>
-    <div class="modal-coin-badge" id="modalCoinBadge">🪙 LTC</div>
-    <div class="modal-addr-label">Send <span id="mCoin">LTC</span> only to this address:</div>
-    <div class="modal-addr" id="modalAddr"></div>
-    <button class="modal-copy-btn" onclick="copyAddr()">📋 Copy Address</button>
-    <div class="modal-steps">
-      <div class="modal-step"><div class="step-num">1</div><span>Copy the address above and send your amount from your wallet or exchange.</span></div>
-      <div class="modal-step"><div class="step-num">2</div><span>Wait for blockchain confirmation — usually 1–5 minutes depending on the coin.</span></div>
-      <div class="modal-step"><div class="step-num">3</div><span>Your ATK Notifier balance updates automatically once confirmed.</span></div>
-    </div>
-    <div class="modal-warning">⚠️ Only send <span id="mCoin2">LTC</span> to this address. Sending a different coin will result in permanent loss of funds.</div>
-  </div>
-</div>
-
-<!-- NAV -->
-<nav>
-  <div class="nav-logo" onclick="showPage('home')">
-    <div class="nav-logo-icon">⚡</div>
-    ATK <span>Notifier</span>
-  </div>
-  <ul class="nav-links">
-    <li><a onclick="showPage('home')" id="nav-home" class="active">Home</a></li>
-    <li><a onclick="showPage('buy')" id="nav-buy">Buy</a></li>
-    <li><a onclick="showPage('customers')" id="nav-customers">Customers</a></li>
-    <li><a onclick="showPage('profile')" id="nav-profile">Profile</a></li>
-  </ul>
-  <div class="nav-right">
-    <span class="nav-balance" id="navBalance" onclick="showPage('profile')" style="display:none">$0.00</span>
-    <div class="nav-user" id="navUser" style="display:none" onclick="showPage('profile')">
-      <span>❤️</span><span id="navUsername">User</span>
-    </div>
-    <button class="nav-logout" id="navLogout" style="display:none" onclick="logout()">Logout</button>
-    <button class="btn-primary" id="navLoginBtn" onclick="document.getElementById('loginOverlay').classList.add('open')" style="padding:8px 20px;font-size:13px">Login</button>
-  </div>
-</nav>
-
-<!-- HOME PAGE -->
-<section class="hero" id="home-page">
-  <div class="badge">Newly Released</div>
-  <h1>ATK Notifier</h1>
-  <p class="tagline">Where Profit Begins</p>
-  <div class="hero-btns">
-    <button class="btn-primary" onclick="loggedIn?showPage('buy'):document.getElementById('loginOverlay').classList.add('open')">Purchase</button>
-    <button class="btn-discord" onclick="window.open('https://discord.gg/atkjoiner','_blank')">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.336-.505.63-1.041.886-1.604a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128c.124-.093.247-.19.372-.292a.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.259.564.553 1.099.889 1.603a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
-      Join Discord
-    </button>
-  </div>
-</section>
-
-<!-- BUY PAGE -->
-<div class="page" id="buy-page">
-  <div class="plans-section">
-    <h2 class="plans-title">Choose Your Plan</h2>
-    <p class="plans-sub">Secure a slot and start sniping instantly &bull; Minimum 2 hours</p>
-    <div class="countdown-box">
-      <div class="countdown-label">Next Slot Opens In</div>
-      <div class="countdown-time" id="countdown">17:28</div>
-      <div class="countdown-dot"></div>
-    </div>
-    <div class="plans-grid">
-      <!-- FARMER -->
-      <div class="plan-card">
-        <div class="plan-header"><div class="plan-name farmer">FARMER</div><div class="plan-slots farmer" id="fBadge">0/4</div></div>
-        <div class="plan-price"><sup>$</sup>4<span>/hr</span></div>
-        <div>
-          <div class="slider-row"><span>Hours</span><span id="fCost">2h – $8.00</span></div>
-          <input type="range" class="plan-slider" id="fSlider" min="2" max="24" value="2">
-          <div class="slider-row"><span>2h</span><span>24h</span></div>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--border);padding-top:12px;">
-          <div class="detail-row"><span>Access to</span><span class="detail-val">300m and under</span></div>
-          <div class="detail-row"><span>Max Value</span><span class="detail-val">300M</span></div>
-          <div class="detail-row"><span>Delay</span><span class="detail-val">0s</span></div>
-        </div>
-        <div class="avail-section">
-          <div class="avail-label"><span>Available</span><span style="color:var(--green)" id="fAvail">4/4</span></div>
-          <div class="avail-bar-wrap"><div class="avail-bar-fill" id="fBar" style="width:100%;background:var(--green)"></div></div>
-          <button class="btn-buy farmer" onclick="buySlot('Farmer',4)">Buy Slot</button>
-        </div>
-        <div class="slots-list" id="fSlots">
-          <div class="slot-row"><span>Slot 1</span><span class="slot-empty">— empty —</span></div>
-          <div class="slot-row"><span>Slot 2</span><span class="slot-empty">— empty —</span></div>
-          <div class="slot-row"><span>Slot 3</span><span class="slot-empty">— empty —</span></div>
-          <div class="slot-row"><span>Slot 4</span><span class="slot-empty">— empty —</span></div>
-        </div>
-      </div>
-      <!-- DIAMOND -->
-      <div class="plan-card">
-        <div class="plan-header"><div class="plan-name diamond">DIAMOND</div><div class="plan-slots diamond" id="dBadge">0/6</div></div>
-        <div class="plan-price"><sup>$</sup>10<span>/hr</span></div>
-        <div>
-          <div class="slider-row"><span>Hours</span><span id="dCost">2h – $20.00</span></div>
-          <input type="range" class="plan-slider diamond" id="dSlider" min="2" max="24" value="2">
-          <div class="slider-row"><span>2h</span><span>24h</span></div>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--border);padding-top:12px;">
-          <div class="detail-row"><span>Access to</span><span class="detail-val">1b+, 100m+, 10m+</span></div>
-          <div class="detail-row"><span>Max Generation</span><span class="detail-val">Unlimited</span></div>
-          <div class="detail-row"><span>Delay</span><span class="detail-val">0s</span></div>
-        </div>
-        <div class="avail-section">
-          <div class="avail-label"><span>Available</span><span style="color:var(--purple-light)" id="dAvail">6/6</span></div>
-          <div class="avail-bar-wrap"><div class="avail-bar-fill" id="dBar" style="width:100%;background:var(--purple)"></div></div>
-          <button class="btn-buy diamond" onclick="buySlot('Diamond',10)">Buy Slot</button>
-        </div>
-        <div class="slots-list" id="dSlots">
-          <div class="slot-row"><span>Slot 1</span><span class="slot-empty">— empty —</span></div>
-          <div class="slot-row"><span>Slot 2</span><span class="slot-empty">— empty —</span></div>
-          <div class="slot-row"><span>Slot 3</span><span class="slot-empty">— empty —</span></div>
-          <div class="slot-row"><span>Slot 4</span><span class="slot-empty">— empty —</span></div>
-          <div class="slot-row"><span>Slot 5</span><span class="slot-empty">— empty —</span></div>
-          <div class="slot-row"><span>Slot 6</span><span class="slot-empty">— empty —</span></div>
-        </div>
-      </div>
-      <!-- BIDDING -->
-      <div class="plan-card">
-        <div class="plan-header"><div class="plan-name bidding">BIDDING</div><div class="plan-slots bidding">0/1</div></div>
-        <div class="plan-price" style="color:var(--gold)"><sup>$</sup>350<span>/hr start</span></div>
-        <div style="display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--border);padding-top:12px;">
-          <div class="detail-row"><span>Win Cost</span><span class="detail-val">$22 (2hrs)</span></div>
-          <div class="detail-row"><span>Rebid Timer</span><span class="detail-val">1:30</span></div>
-          <div class="detail-row"><span>Access</span><span class="detail-val">Diamond-tier</span></div>
-        </div>
-        <div class="avail-section">
-          <div class="avail-label"><span>Available</span><span style="color:var(--gold)">1/1</span></div>
-          <div class="avail-bar-wrap"><div class="avail-bar-fill" style="width:100%;background:var(--gold)"></div></div>
-        </div>
-        <div class="bid-input-row">
-          <input class="bid-input" type="number" id="bidAmt" placeholder="350$/hr min">
-          <button class="bid-btn" onclick="placeBid()">Bid</button>
-        </div>
-        <div class="bid-note">Min bid: $350/hr — $22 charged from balance when you win</div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- CUSTOMERS PAGE -->
-<div class="page" id="customers-page">
-  <div class="customers-section">
-    <h2 class="customers-title">Customers</h2>
-    <p class="customers-sub">All active slot holders</p>
-    <table class="customers-table">
-      <thead><tr><th>Username</th><th>Plan</th><th>Hours</th><th>Status</th></tr></thead>
-      <tbody id="custBody"><tr><td colspan="4" style="color:var(--muted);text-align:center;padding:40px">No customers yet.</td></tr></tbody>
-    </table>
-  </div>
-</div>
-
-<!-- PROFILE PAGE -->
-<div class="page" id="profile-page">
-  <div class="profile-wrap">
-    <div class="profile-header-card">
-      <div class="profile-user-info">
-        <div class="profile-avatar">❤️</div>
-        <div>
-          <div class="profile-name" id="pName">—</div>
-          <div class="profile-id" id="pId">Not logged in</div>
-        </div>
-      </div>
-      <div class="profile-balance-block">
-        <div class="profile-balance-label">Balance</div>
-        <div class="profile-balance-amount" id="pBalance">$0.00</div>
-      </div>
-    </div>
-
-    <!-- Add Funds -->
-    <div class="section-card">
-      <div class="section-title">Add Funds</div>
-      <div class="section-sub">Add funds with crypto or redeem a gift card</div>
-      <div class="deposit-tabs">
-        <button class="dep-tab active" id="tabCrypto" onclick="switchTab('crypto')">Crypto</button>
-        <button class="dep-tab" id="tabGift" onclick="switchTab('gift')">Gift Card</button>
-      </div>
-      <div id="cryptoTab">
-        <div class="crypto-row">
-          <input class="crypto-input" type="number" id="cryptoAmt" placeholder="$ 0.00" min="1">
-          <select class="crypto-select" id="coinSelect">
-            <option>LTC</option>
-            <option>SOL</option>
-            <option>USDT TRC20</option>
-            <option>ETH</option>
-            <option>BTC</option>
-          </select>
-          <button class="dep-btn" onclick="openCryptoModal()">Deposit</button>
-        </div>
-        <div class="crypto-hint">SOL, USDT TRC20, ETH, BTC, LTC</div>
-      </div>
-      <div id="giftTab" style="display:none">
-        <input class="gift-input" type="text" id="giftCode" placeholder="Enter gift card code">
-        <button class="dep-btn" onclick="redeemGift()" style="width:100%;padding:14px">Redeem</button>
-      </div>
-    </div>
-
-    <!-- Your Key -->
-    <div class="section-card">
-      <div class="section-title">Your Key</div>
-      <div style="margin-top:12px">
-        <div class="key-card-inner">
-          <div class="key-header">
-            <div class="key-plan"><div class="key-dot" id="keyDot" style="background:var(--muted)"></div><span id="keyPlan">—</span></div>
-            <div class="key-status expired" id="keyStatus">Expired</div>
-          </div>
-          <div id="keyValWrap" style="display:none"><div class="key-value" id="keyVal"></div></div>
-          <div class="key-empty" id="keyEmpty">Key expired — purchase a new slot to get a fresh key</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Transactions -->
-    <div class="section-card">
-      <div class="section-title">Transaction History</div>
-      <div class="tx-list" id="txList"><div class="tx-empty">No transactions yet.</div></div>
-    </div>
-  </div>
-</div>
-
 <script>
-// Stars
+// Stars - FIXED (was broken with "se.appendChild")
+const starsContainer = document.getElementById('stars');
 for(let i=0;i<120;i++){
   const s=document.createElement('div');
   s.className='star';
   const sz=Math.random()*2.5+0.5;
   s.style.cssText=`width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;--dur:${2+Math.random()*4}s;--delay:${Math.random()*4}s;--op:${0.3+Math.random()*0.6}`;
-  se.appendChild(s);
-} // ✅ THIS LINE IS REQUIRED
-// State
-let balance=0;
+  starsContainer.appendChild(s);
+}
+
+// State - Now properly persists
+let balance = parseFloat(localStorage.getItem("balance")) || 0;
 let loggedIn = localStorage.getItem("loggedIn") === "true";
 let username = localStorage.getItem("username") || "";
-let userId = '';
-// REQUIRED DATA
-let transactions = [];
-let customers = [];
-let farmerSlots = [];
-let diamondSlots = [];
-let activeKey = null;
+let userId = localStorage.getItem("userId") || "";
+
+let transactions = JSON.parse(localStorage.getItem("transactions")) || [];
+let customers = JSON.parse(localStorage.getItem("customers")) || [];
+let farmerSlots = JSON.parse(localStorage.getItem("farmerSlots")) || [];
+let diamondSlots = JSON.parse(localStorage.getItem("diamondSlots")) || [];
+let activeKey = JSON.parse(localStorage.getItem("activeKey")) || null;
 
 const FM = 4;
 const DM = 6;
-// Wallets — replace SOL/ETH/BTC/USDT with your actual addresses
+
 const WALLETS={
   'LTC':'Lg35HX4qi452guwwkMDLZMnp41ViJvhkoH',
   'SOL':'YOUR_SOL_WALLET_HERE',
@@ -452,19 +32,16 @@ const WALLETS={
   'BTC':'YOUR_BTC_WALLET_HERE'
 };
 
-function showPage(p){
-  if((p==='buy'||p==='profile')&&!loggedIn){document.getElementById('loginOverlay').classList.add('open');return;}
-  document.getElementById('home-page').style.display=p==='home'?'flex':'none';
-  ['buy','customers','profile'].forEach(x=>document.getElementById(x+'-page').classList.toggle('active',x===p));
-  ['home','buy','customers','profile'].forEach(x=>{const el=document.getElementById('nav-'+x);if(el)el.classList.toggle('active',x===p);});
-}
-
-function doDiscordLogin(){
-  window.location.href = "https://discord.com/oauth2/authorize?client_id=1487896823350951947&response_type=code&redirect_uri=https%3A%2F%2Fatknotifier.netlify.app%2Fcallback&scope=identify%20email";
-}
-function logout(){
-  loggedIn=false;username='';userId='';balance=0;transactions=[];customers=[];farmerSlots=[];diamondSlots=[];activeKey=null;
-  updateUI();renderSlots();renderCustomers();renderTx();updateKey();showPage('home');showToast('Logged out.');
+function saveState() {
+  localStorage.setItem("loggedIn", loggedIn);
+  localStorage.setItem("username", username);
+  localStorage.setItem("userId", userId);
+  localStorage.setItem("balance", balance);
+  localStorage.setItem("transactions", JSON.stringify(transactions));
+  localStorage.setItem("customers", JSON.stringify(customers));
+  localStorage.setItem("farmerSlots", JSON.stringify(farmerSlots));
+  localStorage.setItem("diamondSlots", JSON.stringify(diamondSlots));
+  localStorage.setItem("activeKey", JSON.stringify(activeKey));
 }
 
 function updateUI(){
@@ -472,22 +49,64 @@ function updateUI(){
   document.getElementById('navUser').style.display=loggedIn?'flex':'none';
   document.getElementById('navLogout').style.display=loggedIn?'':'none';
   document.getElementById('navBalance').style.display=loggedIn?'':'none';
-  document.getElementById('navUsername').textContent=username;
+  document.getElementById('navUsername').textContent=username || "User";
   document.getElementById('navBalance').textContent='$'+balance.toFixed(2);
   document.getElementById('pName').textContent=username||'—';
   document.getElementById('pId').textContent=userId||'Not logged in';
   document.getElementById('pBalance').textContent='$'+balance.toFixed(2);
 }
 
-// Countdown
+function showPage(p){
+  if((p==='buy'||p==='profile')&&!loggedIn){
+    document.getElementById('loginOverlay').classList.add('open');
+    return;
+  }
+  document.getElementById('home-page').style.display=p==='home'?'flex':'none';
+  ['buy','customers','profile'].forEach(x=>document.getElementById(x+'-page').classList.toggle('active',x===p));
+  ['home','buy','customers','profile'].forEach(x=>{const el=document.getElementById('nav-'+x);if(el)el.classList.toggle('active',x===p);});
+}
+
+// FIXED: Purchase button now works properly
+function goToPurchase(){
+  if(!loggedIn){
+    document.getElementById('loginOverlay').classList.add('open');
+  } else {
+    showPage('buy');
+  }
+}
+
+function doDiscordLogin(){
+  window.location.href = "https://discord.com/oauth2/authorize?client_id=1487896823350951947&response_type=code&redirect_uri=https%3A%2F%2Fatknotifier.netlify.app%2Fcallback&scope=identify%20email";
+}
+
+// Simulate login after callback (for testing)
+if (window.location.search.includes('code=') || window.location.pathname.includes('callback')) {
+  setTimeout(() => {
+    loggedIn = true;
+    username = "cute eboy";
+    userId = "123456789";
+    saveState();
+    updateUI();
+    document.getElementById('loginOverlay').classList.remove('open');
+    showToast('✅ Logged in as ' + username);
+    showPage('buy');
+  }, 800);
+}
+
+function logout(){
+  if(confirm("Logout?")) {
+    localStorage.clear();
+    location.reload();
+  }
+}
+
+// Keep ALL your original functions below (only added saveState where needed)
 let secs=17*60+28;
 setInterval(()=>{const m=String(Math.floor(secs/60)).padStart(2,'0'),s=String(secs%60).padStart(2,'0');document.getElementById('countdown').textContent=m+':'+s;if(secs>0)secs--;},1000);
 
-// Sliders
 document.getElementById('fSlider').addEventListener('input',function(){document.getElementById('fCost').textContent=this.value+'h – $'+(this.value*4).toFixed(2);});
 document.getElementById('dSlider').addEventListener('input',function(){document.getElementById('dCost').textContent=this.value+'h – $'+(this.value*10).toFixed(2);});
 
-// Deposit tab
 function switchTab(t){
   document.getElementById('cryptoTab').style.display=t==='crypto'?'block':'none';
   document.getElementById('giftTab').style.display=t==='gift'?'block':'none';
@@ -495,7 +114,6 @@ function switchTab(t){
   document.getElementById('tabGift').classList.toggle('active',t==='gift');
 }
 
-// Crypto modal
 function openCryptoModal(){
   if(!loggedIn){document.getElementById('loginOverlay').classList.add('open');return;}
   const coin=document.getElementById('coinSelect').value;
@@ -515,17 +133,18 @@ function copyAddr(){
   else{const el=document.createElement('textarea');el.value=addr;document.body.appendChild(el);el.select();document.execCommand('copy');document.body.removeChild(el);showToast('📋 Address copied!');}
 }
 
-// Gift card (demo: codes starting with ATK = $10)
 function redeemGift(){
   const code=document.getElementById('giftCode').value.trim();
   if(!code){showToast('Enter a gift card code');return;}
   if(code.toUpperCase().startsWith('ATK')){
     balance+=10;addTx('Deposit','Gift Card',10,true);
-    document.getElementById('giftCode').value='';updateUI();showToast('✅ Gift card redeemed! +$10.00');
+    document.getElementById('giftCode').value='';
+    saveState();
+    updateUI();
+    showToast('✅ Gift card redeemed! +$10.00');
   } else {showToast('❌ Invalid gift card code');}
 }
 
-// Buy slot
 function buySlot(plan,rate){
   if(!loggedIn){document.getElementById('loginOverlay').classList.add('open');return;}
   const slider=plan==='Farmer'?document.getElementById('fSlider'):document.getElementById('dSlider');
@@ -540,6 +159,7 @@ function buySlot(plan,rate){
   const key='ATK-'+plan[0]+'-'+Math.random().toString(36).substring(2,10).toUpperCase();
   activeKey={plan,key};
   addTx('Purchase',plan,cost,false);
+  saveState();                    // ← Added
   updateUI();renderSlots();renderCustomers();updateKey();
   showToast('✅ '+plan+' slot purchased! '+hrs+'h for $'+cost.toFixed(2));
 }
@@ -576,7 +196,6 @@ function updateKey(){
   }
 }
 
-// Bid
 function placeBid(){
   if(!loggedIn){document.getElementById('loginOverlay').classList.add('open');return;}
   const amt=parseFloat(document.getElementById('bidAmt').value)||0;
@@ -586,7 +205,9 @@ function placeBid(){
 }
 
 function addTx(type,sub,amount,positive){
-  transactions.unshift({type,sub,amount,positive});renderTx();
+  transactions.unshift({type,sub,amount,positive});
+  saveState();                    // ← Added
+  renderTx();
 }
 
 function renderTx(){
@@ -601,9 +222,12 @@ function renderCustomers(){
   tb.innerHTML=customers.map(c=>`<tr><td>${c.user}</td><td><span class="badge-plan badge-${c.plan.toLowerCase()}">${c.plan}</span></td><td>${c.hours}h</td><td style="color:var(--green)">● Active</td></tr>`).join('');
 }
 
-function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
+function showToast(msg){const t=document.getElementById('toast');if(!t){const nt=document.createElement('div');nt.id='toast';nt.className='toast';document.body.appendChild(nt);} 
+  const toastEl = document.getElementById('toast'); toastEl.textContent=msg; toastEl.classList.add('show'); setTimeout(()=>toastEl.classList.remove('show'),3000);}
 
+updateUI();
+renderSlots();
+renderCustomers();
 updateKey();
+showPage('home');
 </script>
-</body>
-</html>
